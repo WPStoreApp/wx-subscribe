@@ -5,15 +5,56 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
+  lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: PHP syntax check
+        run: |
+          find . -name '*.php' -not -path './vendor/*' -not -path './.git/*' -print0 | xargs -0 -n1 -P4 php -l
+      - name: Verify tag matches plugin Version
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" == v* ]]; then
+            echo "Use a version tag without the v prefix (WordPress.org SVN tags should match the plugin Version, e.g. 1.2.1)"
+            exit 1
+          fi
+          MAIN=$(grep -rl --include='*.php' 'Plugin Name:' . | grep -vE '^./(vendor|tests|\.git)/' | head -1)
+          VERSION=$(grep -E 'Version:' "$MAIN" | head -1 | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]')
+          echo "tag=$TAG plugin_version=$VERSION file=$MAIN"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Git tag must match plugin Version header"
+            exit 1
+          fi
+
   deploy:
-    name: Publish to WordPress.org plugin directory
+    name: Package, publish, and release
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: WordPress.org plugin deploy
+        id: deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          generate-zip: true
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           SLUG: wx-subscribe
+      - name: Create GitHub Release with plugin zip
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.deploy.outputs.zip-path }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

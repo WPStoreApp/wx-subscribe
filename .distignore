@@ -2,8 +2,13 @@
 /.github
 /.gitignore
 /.distignore
+/.wordpress-org
 /tests
 /bin
 /node_modules
 /vendor
 phpunit.xml.dist
+composer.json
+composer.lock
+package.json
+package-lock.json

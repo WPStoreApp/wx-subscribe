@@ -22,3 +22,26 @@ jobs:
       - name: PHP syntax check
         run: |
           find . -name '*.php' -not -path './vendor/*' -not -path './.git/*' -print0 | xargs -0 -n1 -P4 php -l
+
+  headers:
+    name: Plugin headers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate plugin header and readme.txt
+        run: |
+          set -euo pipefail
+          mains=$(grep -rl --include='*.php' 'Plugin Name:' . | grep -vE '^./(vendor|tests|\.git)/' || true)
+          if [ -z "$mains" ]; then
+            echo "No plugin header (Plugin Name) found"
+            exit 1
+          fi
+          echo "Plugin files:"
+          echo "$mains"
+          main=$(printf '%s\n' "$mains" | head -1)
+          grep -E 'Plugin Name:' "$main"
+          grep -E 'Version:' "$main"
+          test -f readme.txt
+          grep -Ei '^Stable tag:' readme.txt
+          grep -Ei '^Tested up to:' readme.txt
+          echo "Plugin headers OK"
