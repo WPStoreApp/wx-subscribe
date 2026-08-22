@@ -5,8 +5,8 @@
  * @return boolean
  */
 function wxs_assert_plugin_config() {
-	$settings = get_option('wxs-settings');
-	if ($settings['merchant_id'] == '' || $settings['merchant_key'] == '' || $settings['price'] == '') {
+	$settings = (array) get_option('wxs-settings');
+	if (($settings['merchant_id'] ?? '') == '' || ($settings['merchant_key'] ?? '') == '' || ($settings['price'] ?? '') == '') {
 		return false;
 	} else {
 		return true;

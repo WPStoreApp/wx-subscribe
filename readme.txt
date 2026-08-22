@@ -1,10 +1,10 @@
-=== 微信支付付费订阅 ===
+=== WX Subscribe  微信支付付费订阅 ===
 Contributors: bestony
 Donate link: https://www.ixiqin.com/exceptional/
 Tags: payment,subscribe
 Requires at least: 4.6
-Tested up to: 4.9.5
-Stable tag: 1.2
+Tested up to: 7.1
+Stable tag: 1.2.1
 Requires PHP: 7.0.0
 License: GPLv2 
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,4 +52,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 = 1.2 =
 * 加入帮助中心
+
+= 1.2.1 =
+* 修复插件未配置时的 PHP 8 Warning
 

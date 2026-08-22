@@ -29,7 +29,7 @@ function wxs_cancel_order() {
 add_action('init', 'wxs_notify_order');
 function wxs_notify_order() {
 
-	$config = get_option('wxs-settings');
+	$config = (array) get_option('wxs-settings');
 	if ($_SERVER["REQUEST_URI"] == '/wxs_notify_order') {
 		$data = $_POST;
 
@@ -71,14 +71,14 @@ function wxs_get_QRCode() {
 
 	wp_get_current_user();
 
-	$config = get_option('wxs-settings');
+	$config = (array) get_option('wxs-settings');
 	$order_no = wxs_get_new_order();
 	$table_name = $wpdb->prefix . 'subscribe_order';
 	$sql = 'select id,pay_url from `' . $table_name . '` where `user_id`=' . $current_user->ID . " AND `status` = 'UNPAY' AND `time` >= '" . date('Y/m/d H:i:s', strtotime('-2 hour')) . "'";
 	$result = $wpdb->get_results($sql);
 
 	if (count($result) != 0) {
-		return $result[0]->pay_url;
+		return $base_url . $result[0]->pay_url;
 		exit;
 	}
 
@@ -108,15 +108,15 @@ function wxs_get_QRCode() {
 		"Attach" => $order_id,
 		"Body" => $order_title,
 	));
-	
+
 	if ($res->return_code == 1) {
-		$code_url = $res->qrcode;
+		$code_url = $res->code_url;
 		$wpdb->update($table_name, [
 			"pay_url" => $code_url,
 			"payjs_no" => $res->payjs_order_id,
 		],
 			["id" => $order_id]);
-		return $code_url;
+		return $base_url . $code_url;
 		exit;
 	}
 }

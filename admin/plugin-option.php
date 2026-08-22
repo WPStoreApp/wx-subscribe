@@ -34,7 +34,7 @@ function we_settings_section_callback() {
 	echo "在下方配置您的商户信息后，即可使用该商户信息进行微信收款。";
 }
 function wxs_merchant_id_render() {
-	$options = get_option('wxs-settings');
+	$options = (array) get_option('wxs-settings');
 	if (!isset($options['merchant_id'])) {
 		$options['merchant_id'] = '';
 	}
@@ -44,7 +44,7 @@ function wxs_merchant_id_render() {
 	<?php
 }
 function wxs_merchant_key_render() {
-	$options = get_option('wxs-settings');
+	$options = (array) get_option('wxs-settings');
 	if (!isset($options['merchant_key'])) {
 		$options['merchant_key'] = '';
 	}
@@ -54,7 +54,7 @@ function wxs_merchant_key_render() {
 	<?php
 }
 function wxs_price_render() {
-	$options = get_option('wxs-settings');
+	$options = (array) get_option('wxs-settings');
 	if (!isset($options['price'])) {
 		$options['price'] = '';
 	}
