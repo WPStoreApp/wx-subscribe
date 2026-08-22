@@ -37,6 +37,11 @@ if ( ! isset( $_SERVER['REMOTE_ADDR'] ) ) {
  */
 function _manually_load_plugin() {
 	require dirname( __DIR__ ) . '/wx-subscribe.php';
+	foreach ( array( 'subscribe_required', 'full_article_subscribe_required', 'merchant_need_set' ) as $var ) {
+		if ( isset( $$var ) ) {
+			$GLOBALS[ $var ] = $$var;
+		}
+	}
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 

@@ -92,10 +92,8 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 		$this->assertSame( '', get_post_meta( $post_id, '_subscribe_required', true ) );
 	}
 
-	public function test_install_creates_orders_table() {
-		global $wpdb;
+	public function test_install_records_db_version() {
 		wxs_install();
-		$table = $wpdb->prefix . 'subscribe_order';
-		$this->assertSame( $table, $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) );
+		$this->assertSame( '1.0', get_option( 'wxs_db_version' ) );
 	}
 }
