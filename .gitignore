@@ -8,3 +8,6 @@ Icon
 
 # Thumbnails
 ._*
+/vendor/
+/composer.lock
+.phpunit.result.cache
