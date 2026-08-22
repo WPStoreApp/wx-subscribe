@@ -1,0 +1,9 @@
+/.git
+/.github
+/.gitignore
+/.distignore
+/tests
+/bin
+/node_modules
+/vendor
+phpunit.xml.dist
