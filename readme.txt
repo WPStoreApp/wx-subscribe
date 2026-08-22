@@ -20,7 +20,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 使用插件前，需要前往 [Payjs](https://payjs.cn/ref/MDNXMD) 注册并开通商户（支持**个人用户注册**）
 
-项目开源地址：https://github.com/bestony/wx-subscribe
+项目开源地址：https://github.com/WPStoreApp/wx-subscribe
 
 == Installation ==
 

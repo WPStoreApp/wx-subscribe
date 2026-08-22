@@ -3,12 +3,12 @@
 <img src="https://postimg.aliavv.com/newmbp/jluin.png" alt="WeChat SubScribe">
 </p>
 
-<h1 align="center"><a href="https://github.com/bestony/wx-subscribe" target="_blank">微信支付订阅</a></h1>
+<h1 align="center"><a href="https://github.com/WPStoreApp/wx-subscribe" target="_blank">微信支付订阅</a></h1>
 
 > 每个梦想，都值得灌溉
 
 
-[![PHP from Travis config](https://img.shields.io/travis/php-v/symfony/symfony.svg)](https://github.com/bestony/wx-subscribe)
+[![PHP from Travis config](https://img.shields.io/travis/php-v/symfony/symfony.svg)](https://github.com/WPStoreApp/wx-subscribe)
 [![WordPress plugin](https://img.shields.io/wordpress/plugin/v/akismet.svg)](https://wordpress.org/plugins/wx-subscribe/)
 [![WordPress plugin rating](https://img.shields.io/wordpress/plugin/r/akismet.svg)](https://wordpress.org/plugins/wx-subscribe/)
 
