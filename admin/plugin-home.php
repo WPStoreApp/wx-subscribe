@@ -1,8 +1,11 @@
 <?php
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
 function wxs_plugin_home() {
 	if (!current_user_can('manage_options')) {
-		wp_die(__('您无权修改本页设置'));
+		wp_die(esc_html__('You are not allowed to view this page.', 'wx-subscribe'));
 	}
 	?>
 <div class="wrap">
@@ -20,8 +23,6 @@ function wxs_plugin_home() {
 					<div class="postbox">
 
 
-
-							<img src="https://postimg.aliavv.com/newmbp/abyab.jpg" style="width: 100%">
 
 						<!-- .inside -->
 
@@ -100,9 +101,7 @@ function wxs_plugin_home() {
 
 						<h2><span>支持一下</span></h2>
 
-						<div class="inside">
-							<img src="https://postimg.aliavv.com/newmbp/yy1r9.png" alt="微信打赏" style="width:100%;">
-						</div>
+							<div class="inside">感谢您支持 WX Subscribe。</div>
 						<!-- .inside -->
 
 					</div>

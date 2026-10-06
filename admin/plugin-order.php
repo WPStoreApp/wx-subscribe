@@ -1,50 +1,59 @@
 <?php
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+
 function wxs_plugin_orders() {
-	if (!current_user_can('manage_options')) {
-		wp_die(__('您无权修改本页设置'));
+	if (! current_user_can('manage_options')) {
+		wp_die(esc_html__('You are not allowed to view orders.', 'wx-subscribe'));
 	}
+
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'subscribe_order';
-	/**
-	 * 输出页面内容
-	 */
-	echo '<div class="wrap"><h2>订单页面</h2>';
-	echo <<<EOF
-<table class="widefat">
-	<thead>
-	<th class="row-title">ID</th>
-		<th>订单标题</th>
-		<th>订单号</th>
-		<th>支付状态</th>
-		<th>下单时间</th>
-		<th>备注</th>
-		<th>操作</th>
-	</thead>
-	<tbody>
-EOF;
+	$table_name = esc_sql(wxs_get_order_table_name());
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The table identifier is escaped above and cannot use a value placeholder.
+	$data       = $wpdb->get_results('SELECT id, title, order_no, status, time, note FROM `' . $table_name . '` ORDER BY id DESC');
 
-	$data = $wpdb->get_results('SELECT id,title,order_no,status,time,note FROM ' . $table_name);
+	echo '<div class="wrap"><h2>' . esc_html__('Orders', 'wx-subscribe') . '</h2>';
+	echo '<table class="widefat">';
+	echo '<thead><tr>';
+	echo '<th class="row-title">' . esc_html__('ID', 'wx-subscribe') . '</th>';
+	echo '<th>' . esc_html__('Order title', 'wx-subscribe') . '</th>';
+	echo '<th>' . esc_html__('Order number', 'wx-subscribe') . '</th>';
+	echo '<th>' . esc_html__('Payment status', 'wx-subscribe') . '</th>';
+	echo '<th>' . esc_html__('Created', 'wx-subscribe') . '</th>';
+	echo '<th>' . esc_html__('Note', 'wx-subscribe') . '</th>';
+	echo '<th>' . esc_html__('Actions', 'wx-subscribe') . '</th>';
+	echo '</tr></thead><tbody>';
 
-	foreach ($data as $order) {
-		if ($order->status == 'UNPAY') {
-			$str = '<a class="button-primary" target="_blank" href="/wxs_cancel_order?id=' . $order->id . '" />取消订单</a>';
-		} else {
-			$str = '';
-		}
-		echo '<tr class="form-invalid">
-		<td class="row-title">' . $order->id . '</td>
-		<td>' . $order->title . '</td>
-		<td>' . $order->order_no . '</td>
-		<td>' . $order->status . '</td>
-		<td>' . $order->time . '</td>
-		<td>' . $order->note . '</td>
-		<td>' . $str . '</td>
-		</tr>';
+foreach ((array) $data as $order) {
+	$order_id = (int) $order->id;
+	$action   = '';
+	if ('UNPAY' === $order->status) {
+		$url = add_query_arg(
+			array(
+				'action'   => 'wxs_cancel_order',
+				'order_id' => $order_id,
+			),
+			admin_url('admin-post.php')
+		);
+		$url    = wp_nonce_url($url, 'wxs_cancel_order_' . $order_id);
+		$action = sprintf(
+			'<a class="button" href="%1$s">%2$s</a>',
+			esc_url($url),
+			esc_html__('Cancel order', 'wx-subscribe')
+		);
 	}
 
-	echo <<<EOF
-	</tbody>
-</table>
-EOF;
-	echo '</div>';
+	echo '<tr>';
+	echo '<td class="row-title">' . esc_html($order_id) . '</td>';
+	echo '<td>' . esc_html($order->title) . '</td>';
+	echo '<td>' . esc_html($order->order_no) . '</td>';
+	echo '<td>' . esc_html($order->status) . '</td>';
+	echo '<td>' . esc_html($order->time) . '</td>';
+	echo '<td>' . esc_html($order->note) . '</td>';
+	echo '<td>' . wp_kses_post($action) . '</td>';
+	echo '</tr>';
+}
+
+	echo '</tbody></table></div>';
 }

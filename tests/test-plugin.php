@@ -28,6 +28,33 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 		$this->assertMatchesRegularExpression( '/^\d{18}$/', $order );
 	}
 
+	public function test_external_ids_are_strict_positive_integers() {
+		$this->assertSame( 1, wxs_get_positive_int( '1' ) );
+		$this->assertSame( 1, wxs_get_positive_int( 1 ) );
+		$this->assertSame( 0, wxs_get_positive_int( '1 AND SLEEP(10)' ) );
+		$this->assertSame( 0, wxs_get_positive_int( '1e2' ) );
+		$this->assertSame( 0, wxs_get_positive_int( array( 1 ) ) );
+	}
+
+	public function test_payjs_notifications_require_a_valid_signature_and_key() {
+		$payload = array(
+			'attach'       => '12',
+			'out_trade_no' => '202401010000000001',
+			'return_code'  => '1',
+		);
+		$payload['sign'] = strtoupper( md5( urldecode( http_build_query( $payload ) ) . '&key=test-key' ) );
+
+		$payjs = new Musnow\Payjs\Pay( array( 'MerchantKey' => 'test-key' ) );
+		$this->assertTrue( $payjs->Checking( $payload ) );
+
+		$payload['sign'] = str_repeat( '0', 32 );
+		$this->assertFalse( $payjs->Checking( $payload ) );
+
+		$without_key = new Musnow\Payjs\Pay( array( 'MerchantKey' => '' ) );
+		$this->assertFalse( $without_key->Checking( $payload ) );
+		$this->assertFalse( $payjs->Checking( array( 'attach' => array( 12 ), 'sign' => 'invalid' ) ) );
+	}
+
 	public function test_admin_and_client_roles() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $admin_id );
@@ -41,11 +68,11 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 	}
 
 	public function test_subscribe_shortcode() {
-		global $subscribe_required;
+		global $wxs_subscribe_required;
 		$this->assertTrue( shortcode_exists( 'subscribe' ) );
 
 		wp_set_current_user( 0 );
-		$this->assertSame( $subscribe_required, do_shortcode( '[subscribe]secret[/subscribe]' ) );
+		$this->assertSame( $wxs_subscribe_required, do_shortcode( '[subscribe]secret[/subscribe]' ) );
 
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $admin_id );
@@ -57,7 +84,7 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 	}
 
 	public function test_content_filter_hides_required_posts() {
-		global $full_article_subscribe_required;
+		global $wxs_full_article_subscribe_required;
 		$post_id = self::factory()->post->create(
 			array(
 				'post_content' => 'paid article',
@@ -69,7 +96,7 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 		setup_postdata( get_post( $post_id ) );
 
 		wp_set_current_user( 0 );
-		$this->assertSame( $full_article_subscribe_required, wxs_my_the_content_filter( 'paid article' ) );
+		$this->assertSame( $wxs_full_article_subscribe_required, wxs_my_the_content_filter( 'paid article' ) );
 
 		$client_id = self::factory()->user->create( array( 'role' => 'client' ) );
 		wp_set_current_user( $client_id );

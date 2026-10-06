@@ -1,10 +1,12 @@
 <?php
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 /**
  * from shortcode.php
  */
 function wxs_shortode_subscribe($atts, $content = null) {
-	global $subscribe_required;
-	global $current_user;
+	global $wxs_subscribe_required;
 	wp_get_current_user();
 	if (is_user_logged_in()) {
 		/**
@@ -25,12 +27,12 @@ function wxs_shortode_subscribe($atts, $content = null) {
 				/**
 				 * 未订阅者提示需要订阅
 				 */
-				return $subscribe_required;
+				return $wxs_subscribe_required;
 			}
 
 		}
 	} else {
-		return $subscribe_required;
+		return $wxs_subscribe_required;
 	}
 }
 add_shortcode('subscribe', 'wxs_shortode_subscribe');

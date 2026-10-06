@@ -1,4 +1,7 @@
 <?php
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 global $wxs_db_version;
 $wxs_db_version = '1.0';
 /**
@@ -8,6 +11,7 @@ $wxs_db_version = '1.0';
 function wxs_install() {
 	global $wpdb;
 	global $wxs_db_version;
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 	$table_name = $wpdb->prefix . 'subscribe_order';
 
@@ -27,29 +31,6 @@ function wxs_install() {
 		PRIMARY KEY  (id)
 	) $charset_collate;";
 
-	$wpdb->query($sql);
+	dbDelta($sql);
 	add_option('wxs_db_version', $wxs_db_version);
-}
-
-/**
- * 插入测试数据
- * @return [type] [description]
- */
-function wxs_install_data() {
-	global $wpdb;
-
-	$table_name = $wpdb->prefix . 'subscribe_order';
-
-	$wpdb->insert(
-		$table_name,
-		array(
-			'time' => current_time('mysql'),
-			'title' => "测试文章",
-			'note' => "测试用户 - 测试文章",
-			"order_no" => wxs_get_new_order(),
-			"status" => "SUCCESS",
-			"user_id" => 1,
-			'paid_at' => current_time('mysql'),
-		)
-	);
 }

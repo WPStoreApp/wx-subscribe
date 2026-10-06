@@ -1,4 +1,7 @@
 <?php
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
 add_action('profile_personal_options', 'wxs_extra_profile_fields');
 
@@ -8,16 +11,11 @@ add_action('profile_personal_options', 'wxs_extra_profile_fields');
  * @return [type]       [description]
  */
 function wxs_extra_profile_fields($user) {
-	global $current_user;
 	wp_get_current_user();
 	/**
 	 * 输出表头
 	 */
-	echo <<<EOF
-<table class="form-table">
-		<tbody>
-			<tr class="user-admin-bar-front-wrap">
-EOF;
+	echo '<table class="form-table"><tbody><tr class="user-admin-bar-front-wrap">';
 /**
  * 判断是否是管理员
  */
@@ -38,21 +36,16 @@ EOF;
 			<td><fieldset><strong>您已成为本站的付费包年用户</strong></fieldset>
 			</td>
 			<?php
-} else {
+		} else {
 			?>
 			<th scope="row">订阅状态</th>
-			<td><fieldset><img src='<?php echo wxs_get_QRCode(); ?>'></img><p>支付完成后刷新页面</p>
+			<td><fieldset><img src='<?php echo esc_url(wxs_get_QRCode()); ?>' alt='支付二维码'><p>支付完成后刷新页面</p>
 			</fieldset>
 			</td>
 			<?php
 }
 	}
 
-	echo <<<EOF
-</tr>
-
-		</tbody>
-		</table>
-EOF;
+	echo '</tr></tbody></table>';
 
 }

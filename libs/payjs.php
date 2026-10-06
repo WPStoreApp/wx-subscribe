@@ -24,6 +24,9 @@ SOFTWARE.
  */
 
 namespace Musnow\Payjs;
+
+defined('ABSPATH') || exit;
+
 class Pay {
 	private $ssl = true;
 	private $requestUrl = 'https://payjs.cn/api/';
@@ -41,7 +44,7 @@ class Pay {
 			return false;
 		}
 		foreach ($config as $key => $val) {
-			if (isset($key)) {
+			if (property_exists($this, $key)) {
 				$this->$key = $val;
 			}
 		}
@@ -85,13 +88,19 @@ class Pay {
 		     * @return Boolean
 	*/
 	public function Checking($data = array()) {
-		$beSign = $data['sign'];
-		unset($data['sign']);
-		if ($this->Sign($data) == $beSign) {
-			return true;
-		} else {
+		if (!is_array($data) || empty($this->MerchantKey) || !isset($data['sign']) || !is_scalar($data['sign'])) {
 			return false;
 		}
+
+		$beSign = strtoupper((string) $data['sign']);
+		unset($data['sign']);
+		foreach ($data as $value) {
+			if (!is_scalar($value)) {
+				return false;
+			}
+		}
+
+		return hash_equals($this->Sign($data), $beSign);
 	}
 	/*
 		     * 关闭订单
@@ -136,15 +145,24 @@ class Pay {
 	protected function Curl($method, $data, $options = array()) {
 		$url = $this->requestUrl . $method;
 		$response = wp_remote_post($url, array(
-			"body" => $data,
+			"body"       => $data,
+			"timeout"    => 15,
+			"redirection" => 0,
+			"sslverify"  => true,
 		));
 		if (is_wp_error($response)) {
 			return false;
 		} else {
+			$status_code = wp_remote_retrieve_response_code($response);
+			if ($status_code < 200 || $status_code >= 300) {
+				return false;
+			}
+
+			$body = wp_remote_retrieve_body($response);
 			if ($this->ToObject) {
-				return json_decode($response['body']);
+				return json_decode($body);
 			} else {
-				return $response['body'];
+				return $body;
 			}
 		}
 	}

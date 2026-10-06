@@ -37,7 +37,7 @@ if ( ! isset( $_SERVER['REMOTE_ADDR'] ) ) {
  */
 function _manually_load_plugin() {
 	require dirname( __DIR__ ) . '/wx-subscribe.php';
-	foreach ( array( 'subscribe_required', 'full_article_subscribe_required', 'merchant_need_set' ) as $var ) {
+	foreach ( array( 'wxs_subscribe_required', 'wxs_full_article_subscribe_required', 'wxs_merchant_need_set' ) as $var ) {
 		if ( isset( $$var ) ) {
 			$GLOBALS[ $var ] = $$var;
 		}

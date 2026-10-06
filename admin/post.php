@@ -1,4 +1,7 @@
 <?php
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
 add_action('post_submitbox_misc_actions', 'wxs_createCustomField');
 add_action('save_post', 'wxs_saveCustomField');
@@ -42,7 +45,8 @@ function wxs_saveCustomField($post_id) {
 	 */
 	if (
 		!isset($_POST['wxs_subscribe_nonce']) ||
-		!wp_verify_nonce($_POST['wxs_subscribe_nonce'], 'wxs_subscribe_nonce_' . $post_id)
+		!is_scalar($_POST['wxs_subscribe_nonce']) ||
+		!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['wxs_subscribe_nonce'])), 'wxs_subscribe_nonce_' . $post_id)
 	) {
 		return;
 	}
@@ -57,7 +61,7 @@ function wxs_saveCustomField($post_id) {
 	 * 存在此项目就更新
 	 */
 	if (isset($_POST['_subscribe_required'])) {
-		update_post_meta($post_id, '_subscribe_required', $_POST['_subscribe_required']);
+		update_post_meta($post_id, '_subscribe_required', '1');
 	} else {
 		/**
 		 * 不存在就删除

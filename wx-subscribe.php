@@ -3,13 +3,18 @@
 Plugin Name: 	WX Subscribe
 Plugin URI: 	https://www.ixiqin.com/wx-subscribe
 Description: 	微信支付订阅插件，用户通过微信支付进行订阅的支付，实现订阅才能查看付费文章的功能。同时，还提供了短代码对部分内容进行隐藏(<code>[subscribe]</code>)
-Version: 		1.2.1
+Version: 		1.2.2
 Author: 		Bestony
 Author URI: 	https://www.ixiqin.com/
 License: 		GPL2
 License URI:  	https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: 	wx-subscribe
 
  */
+defined('ABSPATH') || exit;
+// Keep the established wxs_ callbacks for backwards compatibility.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+
 /*  Copyright  2018 Bestony (email : xiqingongzi@gmail.com)
 
 This program is free software; you can redistribute it and/or modify
@@ -133,20 +138,11 @@ function wxs_plugin_menu() {
  * 初始化数据库
  */
 register_activation_hook(__FILE__, 'wxs_install');
-/**
- * 插入演示数据
- */
-register_activation_hook(__FILE__, 'wxs_install_data');
 
 /**
  * 添加新的角色
  */
 register_activation_hook(__FILE__, 'wxs_add_roles_on_plugin_activation');
-/**
- * 删除角色
- */
-register_deactivation_hook(__FILE__, 'wxs_del_roles_on_plugin_activation');
-
 /**
  * TODO List
  * @todo  添加 Cron ，一年后自动为用户移除角色
