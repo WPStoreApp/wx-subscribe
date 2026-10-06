@@ -23,6 +23,14 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 		$this->assertTrue( wxs_assert_plugin_config() );
 	}
 
+	public function test_payment_amount_is_converted_to_cents_safely() {
+		$this->assertSame( 999, wxs_get_total_fee( '9.99' ) );
+		$this->assertSame( 0, wxs_get_total_fee( '0.001' ) );
+		$this->assertSame( 0, wxs_get_total_fee( '0' ) );
+		$this->assertSame( 0, wxs_get_total_fee( 'not-a-price' ) );
+		$this->assertSame( 0, wxs_get_total_fee( array( 100 ) ) );
+	}
+
 	public function test_new_order_number_format() {
 		$order = wxs_get_new_order();
 		$this->assertMatchesRegularExpression( '/^\d{18}$/', $order );
@@ -47,6 +55,15 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 		$payjs = new Musnow\Payjs\Pay( array( 'MerchantKey' => 'test-key' ) );
 		$this->assertTrue( $payjs->Checking( $payload ) );
 
+		$payload['empty_field'] = '';
+		$sign_data              = array_filter( $payload, static function ( $value ) {
+			return '' !== (string) $value;
+		} );
+		unset( $sign_data['sign'] );
+		ksort( $sign_data );
+		$payload['sign'] = strtoupper( md5( urldecode( http_build_query( $sign_data ) ) . '&key=test-key' ) );
+		$this->assertTrue( $payjs->Checking( $payload ) );
+
 		$payload['sign'] = str_repeat( '0', 32 );
 		$this->assertFalse( $payjs->Checking( $payload ) );
 
@@ -65,6 +82,29 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 		wp_set_current_user( $client_id );
 		$this->assertFalse( wxs_is_user_admin() );
 		$this->assertTrue( wxs_is_user_client() );
+	}
+
+	public function test_new_paid_users_do_not_receive_a_generic_role() {
+		$legacy_role = get_role( 'client' );
+		$legacy_role->add_cap( 'manage_options' );
+
+		$user_id = self::factory()->user->create();
+		$user    = get_user_by( 'id', $user_id );
+
+		$this->assertTrue( wxs_grant_client_role( $user ) );
+		$this->assertContains( 'wxs_client', $user->roles );
+		$this->assertNotContains( 'client', $user->roles );
+		$this->assertFalse( $user->has_cap( 'manage_options' ) );
+
+		$legacy_role->remove_cap( 'manage_options' );
+	}
+
+	public function test_qr_code_cannot_be_generated_for_another_user() {
+		$current_user_id = self::factory()->user->create();
+		$other_user_id   = self::factory()->user->create();
+		wp_set_current_user( $current_user_id );
+
+		$this->assertSame( '', wxs_get_QRCode( $other_user_id ) );
 	}
 
 	public function test_subscribe_shortcode() {
@@ -121,6 +161,6 @@ class Wx_Subscribe_Test extends WP_UnitTestCase {
 
 	public function test_install_records_db_version() {
 		wxs_install();
-		$this->assertSame( '1.0', get_option( 'wxs_db_version' ) );
+		$this->assertSame( '1.1', get_option( 'wxs_db_version' ) );
 	}
 }

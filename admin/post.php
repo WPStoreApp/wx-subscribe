@@ -33,6 +33,10 @@ function wxs_createCustomField() {
  * @param  int $post_id 文章的ID
  */
 function wxs_saveCustomField($post_id) {
+	if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id) || 'post' !== get_post_type($post_id)) {
+		return;
+	}
+
 	/**
 	 * 自动保存不处理
 	 */
@@ -60,7 +64,8 @@ function wxs_saveCustomField($post_id) {
 	/**
 	 * 存在此项目就更新
 	 */
-	if (isset($_POST['_subscribe_required'])) {
+	$subscribe_required = isset($_POST['_subscribe_required']) && is_scalar($_POST['_subscribe_required']) ? sanitize_text_field(wp_unslash($_POST['_subscribe_required'])) : '';
+	if ('1' === $subscribe_required) {
 		update_post_meta($post_id, '_subscribe_required', '1');
 	} else {
 		/**

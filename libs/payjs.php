@@ -116,6 +116,12 @@ class Pay {
 		     * @return string
 	*/
 	protected function Sign(array $data) {
+		$data = array_filter(
+			$data,
+			static function ($value) {
+				return '' !== (string) $value;
+			}
+		);
 		ksort($data);
 		return strtoupper(md5(urldecode(http_build_query($data)) . '&key=' . $this->MerchantKey));
 	}

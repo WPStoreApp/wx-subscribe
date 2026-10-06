@@ -32,7 +32,7 @@ function wxs_plugin_home() {
 						<h2><span>关于插件</span></h2>
 
 						<div class="inside">
-							本插件是基于 <a href="https://payjs.cn/ref/MDNXMD" target="_blank">payjs.cn</a> 实现的 WordPress 付费订阅插件，实现了如下功能。
+							本插件是基于 <a href="https://payjs.cn/ref/MDNXMD" target="_blank" rel="noopener noreferrer">payjs.cn</a> 实现的 WordPress 付费订阅插件，实现了如下功能。
 							<ol>
 								<li>全文付费阅读</li>
 								<li>文章内容部分付费阅读</li>
@@ -55,7 +55,7 @@ function wxs_plugin_home() {
 </blockquote>
 <strong>是不是违规二清？</strong>
 <blockquote>
-<p>不是二清。详情请看<a href="https://payjs.cn/help/chang-jian-wen-ti/qi-ta.html" target="_blank">支付与清算</a></p>
+							<p>不是二清。详情请看<a href="https://payjs.cn/help/chang-jian-wen-ti/qi-ta.html" target="_blank" rel="noopener noreferrer">支付与清算</a></p>
 </blockquote>
 <strong>交易款如何提现？到账时间？</strong>
 <blockquote>

@@ -3,7 +3,7 @@
 Plugin Name: 	WX Subscribe
 Plugin URI: 	https://www.ixiqin.com/wx-subscribe
 Description: 	微信支付订阅插件，用户通过微信支付进行订阅的支付，实现订阅才能查看付费文章的功能。同时，还提供了短代码对部分内容进行隐藏(<code>[subscribe]</code>)
-Version: 		1.2.2
+Version: 		1.2.3
 Author: 		Bestony
 Author URI: 	https://www.ixiqin.com/
 License: 		GPL2
@@ -42,7 +42,7 @@ include 'libs/utils.php';
 /**
  * 引入 PayJS
  */
-if (!class_exists('Pay')) {
+if (! class_exists('Musnow\\Payjs\\Pay')) {
 	include 'libs/payjs.php';
 }
 
@@ -50,6 +50,7 @@ if (!class_exists('Pay')) {
  * 引入安装函数：数据库初始化
  */
 include 'libs/install.php';
+add_action('init', 'wxs_maybe_upgrade', 1);
 /**
  * 引入激活函数：角色创建与删除
  */

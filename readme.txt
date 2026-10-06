@@ -4,7 +4,7 @@ Donate link: https://www.ixiqin.com/exceptional/
 Tags: payment, subscribe
 Requires at least: 4.6
 Tested up to: 7.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 Requires PHP: 7.0.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -45,6 +45,12 @@ The plugin uses the PayJS API for QR payments and server-to-server payment notif
 5. The subscription settings screen
 
 == Changelog ==
+
+= 1.2.3 =
+* Bound payment notifications to the configured amount and the stored PayJS order.
+* Prevented new payments from assigning a conflicting generic `client` role.
+* Fixed user profile status checks, subdirectory links, and post-save edge cases.
+* Added additional payment and role security regression coverage.
 
 = 1.2.2 =
 * Fixed unauthenticated SQL injection in order cancellation and payment notification handlers.

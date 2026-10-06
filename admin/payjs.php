@@ -142,6 +142,16 @@ function wxs_notify_order() {
 		wxs_notify_response('Payment was not successful.', 400);
 	}
 
+	if (isset($data['mchid']) && (! is_scalar($data['mchid']) || ! hash_equals((string) $config['merchant_id'], (string) $data['mchid']))) {
+		wxs_notify_response('Merchant mismatch.', 400);
+	}
+
+	$payjs_order_id = isset($data['payjs_order_id']) && is_scalar($data['payjs_order_id']) ? (string) $data['payjs_order_id'] : '';
+	$total_fee      = wxs_get_positive_int(isset($data['total_fee']) ? $data['total_fee'] : 0);
+	if ('' === $payjs_order_id || ! $total_fee) {
+		wxs_notify_response('Payment details mismatch.', 400);
+	}
+
 	$order_id = wxs_get_positive_int(isset($data['attach']) ? $data['attach'] : 0);
 	if (! $order_id) {
 		wxs_notify_response('Invalid order.', 400);
@@ -153,7 +163,7 @@ function wxs_notify_order() {
 	$order      = $wpdb->get_row(
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- The table identifier is escaped above and cannot use a value placeholder.
 		$wpdb->prepare(
-			'SELECT id, user_id, order_no, status FROM `' . $table_name . '` WHERE id = %d',
+			'SELECT id, user_id, order_no, payjs_no, total_fee, status FROM `' . $table_name . '` WHERE id = %d',
 			$order_id
 		)
 	);
@@ -166,17 +176,30 @@ function wxs_notify_order() {
 		wxs_notify_response('Order mismatch.', 400);
 	}
 
-	if ('SUCCESS' === $order->status) {
-		wxs_notify_response('OK', 200);
+	if ('' === (string) $order->payjs_no || ! hash_equals((string) $order->payjs_no, $payjs_order_id)) {
+		wxs_notify_response('Payment mismatch.', 400);
 	}
 
-	if ('UNPAY' !== $order->status) {
-		wxs_notify_response('Order is not payable.', 409);
+	$stored_total_fee = wxs_get_positive_int($order->total_fee);
+	if ($stored_total_fee && $stored_total_fee !== $total_fee) {
+		wxs_notify_response('Amount mismatch.', 400);
 	}
 
 	$user = get_user_by('id', (int) $order->user_id);
 	if (! $user) {
 		wxs_notify_response('User not found.', 404);
+	}
+
+	if ('SUCCESS' === $order->status) {
+		if (! wxs_grant_client_role($user)) {
+			wxs_notify_response('Could not grant subscriber access.', 500);
+		}
+
+		wxs_notify_response('OK', 200);
+	}
+
+	if ('UNPAY' !== $order->status) {
+		wxs_notify_response('Order is not payable.', 409);
 	}
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin stores orders in a custom table.
@@ -185,9 +208,10 @@ function wxs_notify_order() {
 		array(
 			'status'  => 'SUCCESS',
 			'paid_at' => current_time('mysql'),
+			'total_fee' => $total_fee,
 		),
 		array('id' => $order_id, 'status' => 'UNPAY'),
-		array('%s', '%s'),
+		array('%s', '%s', '%d'),
 		array('%d', '%s')
 	);
 
@@ -195,7 +219,9 @@ function wxs_notify_order() {
 		wxs_notify_response('Could not update order.', 500);
 	}
 
-	$user->add_role('client');
+	if (! wxs_grant_client_role($user)) {
+		wxs_notify_response('Could not grant subscriber access.', 500);
+	}
 	wxs_notify_response('OK', 200);
 }
 
@@ -212,19 +238,28 @@ function wxs_notify_response($message, $status) {
 	exit;
 }
 
-function wxs_get_QRCode() {
+function wxs_get_QRCode($user_id = 0) {
 	if (! is_user_logged_in()) {
 		return '';
 	}
 
-	$config = wxs_get_payjs_config();
-	if ('' === $config['merchant_id'] || '' === $config['merchant_key'] || $config['price'] <= 0) {
+	$current_user = wp_get_current_user();
+	if (! $current_user instanceof WP_User || ! $current_user->exists()) {
 		return '';
 	}
 
-	$current_user = wp_get_current_user();
-	$user_id      = wxs_get_positive_int($current_user->ID);
-	if (! $user_id) {
+	if (0 === (int) $user_id) {
+		$user_id = (int) $current_user->ID;
+	} else {
+		$user_id = wxs_get_positive_int($user_id);
+		if (! $user_id || $user_id !== (int) $current_user->ID) {
+			return '';
+		}
+	}
+
+	$config = wxs_get_payjs_config();
+	$total_fee = wxs_get_total_fee($config['price']);
+	if ('' === $config['merchant_id'] || '' === $config['merchant_key'] || ! $total_fee) {
 		return '';
 	}
 
@@ -247,7 +282,9 @@ function wxs_get_QRCode() {
 	}
 
 	$order_no    = wxs_get_new_order();
-	$order_title = get_bloginfo('name', 'raw') . '付费订阅 用户名：' . $current_user->display_name;
+	$order_title = sanitize_text_field(
+		wp_strip_all_tags(get_bloginfo('name', 'raw')) . '付费订阅 用户名：' . wp_strip_all_tags($current_user->display_name)
+	);
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin stores orders in a custom table.
 	$inserted    = $wpdb->insert(
 		$table_name,
@@ -259,8 +296,9 @@ function wxs_get_QRCode() {
 			'status'   => 'UNPAY',
 			'user_id'  => $user_id,
 			'paid_at'  => '',
+			'total_fee' => $total_fee,
 		),
-		array('%s', '%s', '%s', '%s', '%s', '%d', '%s')
+		array('%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d')
 	);
 
 	if (false === $inserted) {
@@ -268,6 +306,9 @@ function wxs_get_QRCode() {
 	}
 
 	$order_id = (int) $wpdb->insert_id;
+	if (! $order_id) {
+		return '';
+	}
 	$payjs    = new Musnow\Payjs\Pay(
 		array(
 			'MerchantID'  => $config['merchant_id'],
@@ -277,7 +318,7 @@ function wxs_get_QRCode() {
 	);
 	$result = $payjs->qrPay(
 		array(
-			'TotalFee'   => (int) round($config['price'] * 100),
+			'TotalFee'   => $total_fee,
 			'outTradeNo' => $order_no,
 			'Attach'     => $order_id,
 			'Body'       => $order_title,
@@ -294,10 +335,11 @@ function wxs_get_QRCode() {
 		array(
 			'pay_url'  => (string) $result->code_url,
 			'payjs_no' => (string) $result->payjs_order_id,
+			'total_fee' => $total_fee,
 		),
-		array('id' => $order_id),
-		array('%s', '%s'),
-		array('%d')
+		array('id' => $order_id, 'status' => 'UNPAY'),
+		array('%s', '%s', '%d'),
+		array('%d', '%s')
 	);
 
 	return false === $updated ? '' : wxs_get_qr_url($result->code_url);

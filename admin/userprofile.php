@@ -19,7 +19,7 @@ function wxs_extra_profile_fields($user) {
 /**
  * 判断是否是管理员
  */
-	if (wxs_is_user_admin()) {
+	if (wxs_is_user_admin($user)) {
 		?>
 <th scope="row">订阅状态</th>
 			<td><fieldset>管理员无需订阅
@@ -30,7 +30,7 @@ function wxs_extra_profile_fields($user) {
 		/**
 		 * 判断是否已经订阅
 		 */
-		if (wxs_is_user_client()) {
+		if (wxs_is_user_client($user)) {
 			?>
 			<th scope="row">订阅状态</th>
 			<td><fieldset><strong>您已成为本站的付费包年用户</strong></fieldset>
@@ -39,7 +39,12 @@ function wxs_extra_profile_fields($user) {
 		} else {
 			?>
 			<th scope="row">订阅状态</th>
-			<td><fieldset><img src='<?php echo esc_url(wxs_get_QRCode()); ?>' alt='支付二维码'><p>支付完成后刷新页面</p>
+			<td><fieldset>
+			<?php if ((int) get_current_user_id() === (int) $user->ID) : ?>
+			<img src='<?php echo esc_url(wxs_get_QRCode($user->ID)); ?>' alt='支付二维码'><p>支付完成后刷新页面</p>
+			<?php else : ?>
+			尚未订阅
+			<?php endif; ?>
 			</fieldset>
 			</td>
 			<?php

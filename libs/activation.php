@@ -8,12 +8,15 @@ defined('ABSPATH') || exit;
  * @return [type] [description]
  */
 function wxs_add_roles_on_plugin_activation() {
-	add_role('client', esc_html__(
-		'Paid subscriber',
-		'wx-subscribe'
-	),
-		array(
-			'read' => true,
-		)
-	);
+	// Keep the legacy role for existing integrations, but never assign it to
+	// new users because another plugin may have added extra capabilities to it.
+	if (! get_role('client')) {
+		add_role(
+			'client',
+			__('Paid subscriber', 'wx-subscribe'),
+			array('read' => true)
+		);
+	}
+
+	wxs_ensure_client_role();
 }

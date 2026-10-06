@@ -19,6 +19,9 @@ function wxs_hide_admin_notices() {
  */
 function wxs_admin_notices() {
 	global $wxs_merchant_need_set;
+	if (! current_user_can('manage_options')) {
+		return;
+	}
 
 	if (wxs_assert_plugin_config()) {
 		// 用户已经设置，不做任何输出
